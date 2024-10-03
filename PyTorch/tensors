@@ -1,0 +1,66 @@
+Tensors are the fundamental block of machine learning
+Their job is to represent data in a numerical way
+
+Generally if you see torch.cuda anywhere,the tensor is being used for GPU(since Nvidia GPUs use a computing
+toolkit called CUDA).
+The most common type(and generally the default) is torch.float32 or torch.float
+
+In deep learning,data(images,text,video,audio,protein structures,etc.) gets represented as tensors.
+A model learns by investigating those tensors and performing a series of operations on tensors to create a
+representation of the patterns in the input data
+Operations:
+Addition
+Substraction
+Multiplication (element-wise)
+Division
+Matrix multiplication
+
+One of the most common errors in deep learning (shape errors)
+Because much of deep learning is multiplying and performing operations on matrices and matrices have a strict
+rule about what shapes and sizes can be combined,one of the most common errors you'll run into in deep learning
+is shape mismatches
+We can make matrix multiplication work between tensor_A and tensor_B by making their inner dimensions match
+One of the ways to do this is with a transpose(switch the dimensions of a given tensor)
+
+You can perform transposes in PyTorch using either:
+torch.transpose(input, dim0, dim1) - where input is the desired tensor to transpose and dim0 and dim1
+are the dimensions to be swapped.
+tensor.T - where tensor is the desired tensor to transpose.'
+
+
+Indexing (selecting data from tensors)
+Sometimes you'll want to select some specific data from tensors(for example,only the first column or second row).
+To do so,you can use indexing.
+If you've ever done indexing on Python lists or NumPy arrays, indexing in PyTorch with tensors is very similar.
+Indexing values goes outer dimension -> inner dimension
+
+You can also use : to specify "all values in this dimension" and then use a comma (,) to add another dimension.
+
+PyTorch tensors & NumPy
+Since NumPy is a popular Python numerical computing library,PyTorch has functionality to interact with it nicely.
+The two main methods you'll want to use in NumPy to PyTorch(and back again) are:
+-torch.from_numpy(ndarray) - NumPy array -> PyTorch tensor
+-torch.Tensor.numpy() - PyTorch tensor -> NumPy array
+Note:By default,NumPy arrays are created with the datatype float64 and if you convert it to a PyTorch tensor,
+it'll keep the same datatype
+However, many PyTorch calculations default to using float32.
+
+So if you want to convert your NumPy array (float64) -> PyTorch tensor (float64) -> PyTorch tensor (float32),
+ you can use tensor = torch.from_numpy(array).type(torch.float32).
+torch.float32(tensor)
+default dtype is float64(numpy array)
+
+Reproducibility (trying to take the random out of random)
+Reproducibility (trying to take the random out of random)
+As you learn more about neural networks and machine learning, you'll start to discover
+how much randomness plays a part.
+
+Well, pseudorandomness that is. Because after all, as they're designed, a computer is fundamentally
+deterministic (each step is predictable) so the randomness they create are simulated randomness
+(though there is debate on this too, but since I'm not a computer scientist, I'll let you find out more yourself).
+
+How does this relate to neural networks and deep learning then?
+
+We've discussed neural networks start with random numbers to describe patterns in data
+(these numbers are poor descriptions) and try to improve those random numbers using tensor operations
+ (and a few other things we haven't discussed yet) to better describe patterns in data.

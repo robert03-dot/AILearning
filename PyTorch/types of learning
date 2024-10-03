@@ -1,0 +1,5 @@
+types of learning
+
+supervised learning is when you have data and labels
+unsupervised&self-supervised learning is you have just the data itself
+transfer learning's taking the pattern that one model has learned of a dataset and transferring it to another model

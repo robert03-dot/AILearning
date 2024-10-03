@@ -1,0 +1,14 @@
+What is PyTorch?
+PyTorch is an open source machine learning and deep learning framework
+It is used for the application such as Natural Language Processing and Computer Vision.
+
+What can PyTorch be used for?
+Pytorch can be used to manipulate and process data and write ML algorithms using Python code.
+
+
+A scalar is a single number and in tensor-speak it's a zero dimension tensor
+
+
+A vector is a single dimension tensor but can contain many numbers.
+The important trend here is that a vector is flexible in what is can be represent
+
