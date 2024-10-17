@@ -230,3 +230,8 @@ for epoch in range(epochs):
     # Print out model.state_dict()
     print(model_0.state_dict())
 
+# Weights control the signal (or the strength of the connection) between two neurons.
+# In other words, a weight decides how much influence the input will have on the output.
+# Biases, which are constant, are an additional input into the next layer that will always have the value of 1.
+
+# A gradient simply measures the change in all weights with regard to the change in error.
