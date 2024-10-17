@@ -1,0 +1,143 @@
+Linear regression is a statistical technique used to find the relationship between variables.
+In an ML context, linear regression finds the relationship between features and a label.
+
+
+
+Loss is a numerical metric that describes how wrong a model's predictions are.
+Loss measures the distance between the model's predictions and the actual labels.
+The goal of training a model is to minimize the loss, reducing it to its lowest possible value.
+In statistics and machine learning, loss measures the difference between the predicted and actual values.
+Loss focuses on the distance between the values, not the direction.
+Instead, we care that the distance between the values is 3.
+Thus, all methods for calculating loss remove the sign.
+The two most common methods to remove the sign are the following:
+-Take the absolute value of the difference between the actual value and the prediction.
+
+-Square the difference between the actual value and the prediction.
+Types of loss
+In linear regression, there are four main types of loss, which are outlined in the following table.
+
+Loss type	                Definition
+L1 loss	                    The sum of the absolute values of the difference between the predicted values and the actual values.
+Mean absolute error (MAE)	The average of L1 losses across a set of examples.
+L2 loss	                    The sum of the squared difference between the predicted values and the actual values.
+Mean squared error (MSE)	The average of L2 losses across a set of examples.
+
+outliers
+Values distant from most other values. In machine learning, any of the following are outliers:
+
+Input data whose values are more than roughly 3 standard deviations from the mean.
+Weights with high absolute values.
+Predicted values relatively far away from the actual values.
+
+Choosing a loss
+Deciding whether to use MAE or MSE can depend on the dataset and the way you want to handle certain predictions.
+Most feature values in a dataset typically fall within a distinct range. For example, cars are normally
+between 2000 and 5000 pounds and get between 8 to 50 miles per gallon. An 8,000-pound car, or a car that
+gets 100 miles per gallon, is outside the typical range and would be considered an outlier.
+
+An outlier can also refer to how far off a model's predictions are from the real values.
+For instance, a 3,000-pound car or a car that gets 40 miles per gallon are within the typical ranges.
+However, a 3,000-pound car that gets 40 miles per gallon would be an outlier in terms of the model's
+prediction because the model would predict that a 3,000-pound car would get between 18 and 20 miles per gallon.
+
+When choosing the best loss function, consider how you want the model to treat outliers. For instance,
+MSE moves the model more toward the outliers, while MAE doesn't. L2 loss incurs a much higher penalty
+for an outlier than L1 loss. For example, the following images show a model trained using MAE and a model
+trained using MSE. The red line represents a fully trained model that will be used to make predictions.
+The outliers are closer to the model trained with MSE than to the model trained with MAE.
+
+Note the relationship between the model and the data:
+MSE. The model is closer to the outliers but further away from most of the other data points.
+MAE. The model is further away from the outliers but closer to most of the other data points.
+
+
+
+Gradient descent is a mathematical technique that iteratively finds the weights and bias that
+produce the model with the lowest loss. Gradient descent finds the best weight and bias by
+repeating the following process for a number of user-defined iterations.
+The model begins training with randomized weights and biases near zero, and then repeats the following steps:
+Calculate the loss with the current weight and bias.
+Determine the direction to move the weights and bias that reduce loss.
+Move the weight and bias values a small amount in the direction that reduces loss.
+Return to step one and repeat the process until the model can't reduce the loss any further.
+
+The loss functions for linear models always produce a convex surface. As a result of this property,
+when a linear regression model converges, we know the model has found the weights and bias that produce
+the lowest loss.
+If we graph the loss surface for a model with one feature, we can see its convex shape.
+
+A linear model converges when it's found the minimum loss. Therefore,
+additional iterations only cause gradient descent to move the weight and bias
+values in very small amounts around the minimum. If we graphed the weights and bias points during gradient descent,
+the points would look like a ball rolling down a hill, finally stopping at the point where there's no more
+downward slope.
+
+Hyperparameters are variables that control different aspects of training. Three common hyperparameters are:
+Learning rate
+Batch size
+Epochs
+
+In contrast, parameters are the variables, like the weights and bias,
+that are part of the model itself. In other words, hyperparameters are values that you control;
+parameters are values that the model calculates during training.
+
+Learning rate
+Learning rate is a floating point number you set that influences how quickly the model converges.
+If the learning rate is too low, the model can take a long time to converge.
+However, if the learning rate is too high, the model never converges,
+but instead bounces around the weights and bias that minimize the loss.
+The goal is to pick a learning rate that's not too high nor too low so that the model converges quickly.
+The learning rate determines the magnitude of the changes to make to the weights and bias
+during each step of the gradient descent process. The model multiplies the gradient by the
+learning rate to determine the model's parameters (weight and bias values) for the next iteration.
+In the third step of gradient descent, the "small amount" to move in the direction of negative slope refers
+to the learning rate.
+The difference between the old model parameters and the new model parameters is proportional
+to the slope of the loss function. For example, if the slope is large, the model takes a large step.
+If small, it takes a small step. For example, if the gradient's magnitude is 2.5 and the learning rate is 0.01,
+then the model will change the parameter by 0.025.
+The ideal learning rate helps the model to converge within a reasonable number of iterations.
+
+Batch size is a hyperparameter that refers to the number of examples the model processes
+before updating its weights and bias. You might think that the model should calculate the loss for
+every example in the dataset before updating the weights and bias. However, when a dataset contains hundreds
+of thousands or even millions of examples, using the full batch isn't practical.
+Two common techniques to get the right gradient on average without needing to look at every
+example in the dataset before updating the weights and bias are stochastic gradient descent
+and mini-batch stochastic gradient descent:
+Stochastic gradient descent (SGD): Stochastic gradient descent uses only a single example
+(a batch size of one) per iteration. Given enough iterations, SGD works but is very noisy.
+"Noise" refers to variations during training that cause the loss to increase rather than decrease during an
+iteration. The term "stochastic" indicates that the one example comprising each batch is chosen at random.
+Mini-batch stochastic gradient descent (mini-batch SGD): Mini-batch stochastic gradient descent is a
+compromise between full-batch and SGD.
+The model chooses the examples included in each batch at random, averages their gradients,
+and then updates the weights and bias once per iteration.
+Determining the number of examples for each batch depends on the dataset and the available compute resources.
+In general, small batch sizes behaves like SGD, and larger batch sizes behaves like full-batch gradient descent.
+
+During training, an epoch means that the model has processed every example in the training set once.
+For example, given a training set with 1,000 examples and a mini-batch size of 100 examples, it will
+take the model 10 iterations to complete one epoch.
+Training typically requires many epochs. That is, the system needs to process every example in the
+training set multiple times.
+The number of epochs is a hyperparameter you set before the model begins training. In many cases,
+you'll need to experiment with how many epochs it takes for the model to converge.
+In general, more epochs produces a better model, but also takes more time to train.
+
+Batch type	When weights and bias updates occur
+Full batch	After the model looks at all the examples in the dataset. For instance,
+if a dataset contains 1,000 examples and the model trains for 20 epochs, the model
+updates the weights and bias 20 times, once per epoch.
+Stochastic gradient descent	After the model looks at a single example from the dataset.
+For instance, if a dataset contains 1,000 examples and trains for 20 epochs, the model
+updates the weights and bias 20,000 times.
+Mini-batch stochastic gradient descent	After the model looks at the examples in each batch.
+For instance, if a dataset contains 1,000 examples, and the batch size is 100,
+and the model trains for 20 epochs, the model updates the weights and bias 200 times.
+
+PyTorch provides two data primitives: torch.utils.data.DataLoader
+and torch.utils.data.Dataset that allow you to use pre-loaded
+datasets as well as your own data. Dataset stores the samples and their corresponding labels,
+and DataLoader wraps an iterable around the Dataset to enable easy access to the samples.
