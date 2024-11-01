@@ -6,14 +6,18 @@
 # torch.utils.data.Dataset - Base dataset class for PyTorch
 # torch.utils.data.DataLoader - Creates a Python iterable over a dataset
 # Create a model with non-linear and linear layers
+import random
 from pathlib import Path
+
+import pandas as pd
 import requests
 import torchvision
 from datasets import tqdm
 from matplotlib import pyplot as plt
-from torch import nn, torch
+from torch import nn, torch, device
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
+
 from helper_functions import accuracy_fn
 from torchvision import datasets
 from timeit import default_timer as timer
@@ -169,6 +173,7 @@ def print_train_time(start: float,
                      end: float):
     """Prints difference between start and end time."""
     total_time = end - start
+    print(f"Train time on {device}:{total_time:.3f} seconds")
     return total_time
 
 
@@ -176,6 +181,8 @@ start_time = timer()
 end_time = timer()
 print_train_time(start=start_time,
                  end=end_time)
+
+# Set the seed and start the timer
 
 # Set the seed and start the timer
 torch.manual_seed(42)
@@ -215,7 +222,7 @@ for epoch in tqdm(range(epochs)):
     # Divide total train loss by length of train dataloader
     train_loss /= len(train_dataloader)
 
-    ### Testing
+    # Testing
     test_loss, test_acc = 0, 0
     model_0.eval()
     with torch.inference_mode():
@@ -433,48 +440,50 @@ class FashionMNISTV2(nn.Module):
     def __init__(self, input_shape: int, hidden_units: int, output_shape: int):
         super().__init__()
         self.conv_block_1 = nn.Sequential(
-            nn.Conv2d(in_channels=3,
+            # Create a conv layer - https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
+            nn.Conv2d(in_channels=input_shape,
+                      out_channels=hidden_units,
+                      kernel_size=3,
+                      stride=1,
+                      padding=1),  # values we can set ourselves in our NN's are called hyperparameters
+            nn.ReLU(),
+            nn.Conv2d(in_channels=hidden_units,
                       out_channels=hidden_units,
                       kernel_size=3,
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=3,
-                      out_channels=hidden_units,
-                      kernel_size=3,
-                      stride=1,
-                      padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, )
+            nn.MaxPool2d(kernel_size=2)
         )
         self.conv_block_2 = nn.Sequential(
-            nn.Conv2d(in_channels=3,
+            nn.Conv2d(in_channels=hidden_units,
                       out_channels=hidden_units,
                       kernel_size=3,
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=3,
+            nn.Conv2d(in_channels=hidden_units,
                       out_channels=hidden_units,
                       kernel_size=3,
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, )
+            nn.MaxPool2d(kernel_size=2)
         )
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(in_features=hidden_units * 0,
-                      out_features=output_shape),
+            nn.Linear(in_features=hidden_units * 7 * 7,  # there's a trick to calculating this...
+                      out_features=output_shape)
         )
 
-        def forward(x):
-            x = self.conv_block_1(x)
-            print(x.shape)
-            x = self.conv_block_2(x)
-            print(x.shape)
-            x = self.classifier(x)
-            return x
+    def forward(self, x):
+        x = self.conv_block_1(x)
+        # print(f"Output shape of conv_block_1: {x.shape}")
+        x = self.conv_block_2(x)
+        # print(f"Output shape of conv_block_2: {x.shape}")
+        x = self.classifier(x)
+        # print(f"Output shape of classifier: {x.shape}")
+        return x
 
 
 print(image.shape)
@@ -483,6 +492,14 @@ model_2 = FashionMNISTV2(input_shape=1,
                          hidden_units=10,
                          output_shape=len(class_names))
 print(model_2.state_dict())
+# plt.imshow(image.squeeze(),cmap='gray')
+
+rand_image_tensor = torch.randn(size=(1, 28, 28))
+print(rand_image_tensor.shape)
+
+# Pass image through model
+model_2(rand_image_tensor.unsqueeze(0))
+plt.imshow(image.squeeze(), cmap="gray")
 # In the Tiny VGG architecture, convolutional layers are fully-connected,
 # meaning each neuron is connected to every other neuron in the previous layer.
 
@@ -531,3 +548,161 @@ print()
 print(f"Single image batch shape:{test_image.shape}")
 print()
 print(f"Test image:\n{test_image}")
+torch.manual_seed(42)
+# Create a single conv2d layer
+conv_layer = nn.Conv2d(in_channels=3,
+                       out_channels=10,
+                       kernel_size=(3, 3),
+                       stride=1,
+                       padding=0)
+# Pass the data through the convolutional layer
+conv_output = conv_layer(test_image.unsqueeze(0))
+print(conv_output.shape)
+
+# Convolution is a mathematical operation that allows the merging of two sets of information.
+# In the case of CNN, convolution is applied to the input data to filter the information and
+# produce a feature map. This filter is also called a kernel, or feature detector,
+# and its dimensions can be, for example, 3x3.
+
+print(f"Test image original shape:{test_image.shape}")
+print(f"Test image with unsqueezed dimension:{test_image.unsqueeze(0).shape}")
+
+max_pool_layer = nn.MaxPool2d(kernel_size=2)
+
+# Pass data through just the conv_layer
+test_image_through_conv = max_pool_layer(test_image.unsqueeze(dim=0))
+print(f"Shape after going through conv layer():{test_image_through_conv.shape}")
+
+# Pass data through just the max pool layer
+test_image_through_conv_and_max_pool = max_pool_layer(test_image_through_conv)
+print(f"Shape after going through conv_layer() and max_pool_layer():{test_image_through_conv_and_max_pool.shape}")
+
+torch.manual_seed(42)
+# Create a random tensor with a similar number of dimensions to our images
+random_tensor = torch.rand(size=(1, 1, 2, 2))
+print(f"\nRandom tensor:\n{random_tensor}")
+print(f"\nRandom tensor shape:\n{random_tensor.shape}")
+# Create a max pool layer
+max_pool_layer = nn.MaxPool2d(kernel_size=2)
+
+# Pass the random tensor through the max pool layer
+max_pool_tensor = max_pool_layer(random_tensor)
+print(f"\nMax pool tensor:\n{max_pool_tensor}")
+print(f"\nMax pool tensor shape:\n{max_pool_tensor.shape}")
+print()
+print(random_tensor)
+
+# Breakdown of torch.nn.Conv2d layer
+##
+# Hyperparameter name                             What does it do                                                       Typical values
+# in_channels                                     Defines the number of input channels of the input data                1(grayscale),3(RGB color images)
+# out_channels                                    Defines the number output channels of the layer(could
+#                                                 also be called hidden units)                                          10,128,256,512
+# kernel_size(also referred to a filter size)     Determines the shape of the kernel (sliding windows) over the input   3,5,7(lowers values learn smaller features,higher values learn higher features)
+# stride                                          The number of steps a filter takes across an image at a time
+#                                                 (e.g. if strides=1,a filter moves across an image 1 pixel at a time)  1(default),2
+# padding                                        Pads the target tensor with zeroes (if "same") to preserve input shape.
+#                                                 Or leaves in the target tensor as is(if "vaild"),lowering output shape 0,1,"same","valid"
+
+# 7.3 Setup a loss function and optimizer for model_2
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(params=model_2.parameters(),
+                            lr=0.1)
+
+torch.manual_seed(42)
+train_time_start_model_2 = timer()
+
+epochs = 3
+for epoch in tqdm(range(epochs)):
+    print(f"Epoch: {epoch}\n-------")
+    train_step(model=model_2,
+               data_loader=train_dataloader,
+               loss_fn=loss_fn,
+               optimizer=optimizer,
+               accuracy_fn=accuracy_fn)
+    test_step(model=model_2,
+              data_loader=test_dataloader,
+              loss_fn=loss_fn,
+              accuracy_fn=accuracy_fn
+              )
+    train_time_end_model_2 = timer()
+    total_train_time_model_2 = print_train_time(start=train_time_start_model_2,
+                                                end=train_time_end_model_2)
+model_2_results = eval_model(
+    model=model_2,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn
+)
+print(model_2_results)
+
+# 8.Compare model results and training time
+compare_results = pd.DataFrame([model_0_results,
+                                model_1_results,
+                                model_2_results])
+print(compare_results)
+print()
+
+# Add training time to results comparison
+compare_results["training_time"] = [total_train_time_model_0,
+                                    total_train_time_model_1,
+                                    total_train_time_model_2]
+print(compare_results)
+
+compare_results.set_index("model_name")["model_acc"].plot(kind="barh")
+plt.xlabel("accuracy(%)")
+plt.ylabel("model")
+plt.show()
+
+# 9.Make and evaluate random predictions with best model
+def make_predictions(model: torch.nn.Module,
+                     data:list):
+    pred_probs = []
+    model.eval()
+    with torch.inference_mode():
+        for sample in data:
+            # Prepare the sample (add a batch dimension and pass to target device)
+            sample = torch.unsqueeze(sample, dim=0)
+            pred_logit = model(sample)
+            pred_prob = torch.softmax(pred_logit.squeeze(), dim=0)
+            pred_probs.append(pred_prob)
+# Stack the pred probs to turn list into a tensor
+    return torch.stack(pred_probs)
+random.seed(42)
+test_samples = []
+test_labels = []
+for sample,label in random.sample(list(test_data),k=9):
+    test_samples.append(sample)
+    test_labels.append(label)
+
+print(test_samples[0].shape)
+
+plt.imshow(test_samples[0].squeeze(),cmap="gray")
+plt.title(class_names[test_labels[0]])
+plt.show()
+
+pred_probs = make_predictions(model=model_2,
+                              data=test_samples)
+print()
+print(pred_probs[:2])
+print()
+pred_classes = pred_probs.argmax(dim=1)
+print(pred_classes)
+
+# Plot predictions
+plt.figure(figsize=(9,9))
+nrows = 3
+ncols = 3
+for i,sample in enumerate(test_samples):
+    plt.subplot(nrows, ncols, i+1)
+    plt.imshow(sample.squeeze(),cmap="gray")
+    pred_label = class_names[pred_classes[i]]
+    truth_label = class_names[test_labels[i]]
+    title_text = f"Pred: {pred_label}, Truth: {truth_label}"
+
+    if pred_label == truth_label:
+        plt.title(title_text, fontsize=10, c='g')
+    else:
+        plt.title(title_text, fontsize=10, c='r')
+    plt.axis(False)
+    plt.show()
