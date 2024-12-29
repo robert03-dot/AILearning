@@ -12,6 +12,7 @@ import torchmetrics
 from sklearn.datasets import make_circles, make_blobs
 from sklearn.model_selection import train_test_split
 from torch import nn
+from torchmetrics import Accuracy
 
 from PyTorch.helper_functions import plot_decision_boundary
 
@@ -785,6 +786,9 @@ plt.show()
 #
 #                                                                                                      Can be hard to use with large number of classes
 # Setup metric
-torchmetric_accuracy = torchmetrics.Accuracy()
-accuracy = torchmetric_accuracy(y_preds,y_blob_test)
+
+torchmetric_accuracy = Accuracy(task = 'multiclass')
+
+# Calculuate accuracy
+accuracy = torchmetric_accuracy(y_preds, y_blob_test)
 print(accuracy)

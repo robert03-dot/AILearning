@@ -1,0 +1,6 @@
+NLP components:
+-NLU(Natural Language Understanding)
+-NLG(Natural Language Generation)
+
+NLU is mapping input to useful representations and analyzing different aspects to the language
+NLG is planning text,sentence planning and realizes text

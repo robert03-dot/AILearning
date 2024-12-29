@@ -66,7 +66,7 @@ loss_fn = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.SGD(model.parameters(),
                          lr=0.1)
 
-accuracy_fn = Accuracy()
+accuracy_fn = Accuracy(task='multiclass')
 torch.manual_seed(42)
 epochs = 1000
 for epoch in range(epochs):

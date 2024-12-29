@@ -6,6 +6,7 @@
 # torch.utils.data.Dataset - Base dataset class for PyTorch
 # torch.utils.data.DataLoader - Creates a Python iterable over a dataset
 # Create a model with non-linear and linear layers
+import os
 import random
 from pathlib import Path
 
@@ -43,6 +44,7 @@ print(len(train_data), len(test_data))
 # See the first training example
 image, label = train_data[0]
 print(image, label)
+
 class_names = train_data.classes
 print(class_names)
 
@@ -428,7 +430,7 @@ print(model_0_results)
 # The convolutional layer is the core building block of a CNN, and
 # it is where the majority of computation occurs.
 # It requires a few components, which are input data, a filter, and a feature map.
-class FashionMNISTV2(nn.Module):
+class FashionMNISTModelV2(nn.Module):
     # A
     # Conv - block
     # stacks
@@ -488,7 +490,7 @@ class FashionMNISTV2(nn.Module):
 
 print(image.shape)
 torch.manual_seed(42)
-model_2 = FashionMNISTV2(input_shape=1,
+model_2 = FashionMNISTModelV2(input_shape=1,
                          hidden_units=10,
                          output_shape=len(class_names))
 print(model_2.state_dict())
@@ -654,9 +656,10 @@ plt.xlabel("accuracy(%)")
 plt.ylabel("model")
 plt.show()
 
+
 # 9.Make and evaluate random predictions with best model
 def make_predictions(model: torch.nn.Module,
-                     data:list):
+                     data: list):
     pred_probs = []
     model.eval()
     with torch.inference_mode():
@@ -666,18 +669,20 @@ def make_predictions(model: torch.nn.Module,
             pred_logit = model(sample)
             pred_prob = torch.softmax(pred_logit.squeeze(), dim=0)
             pred_probs.append(pred_prob)
-# Stack the pred probs to turn list into a tensor
+    # Stack the pred probs to turn list into a tensor
     return torch.stack(pred_probs)
+
+
 random.seed(42)
 test_samples = []
 test_labels = []
-for sample,label in random.sample(list(test_data),k=9):
+for sample, label in random.sample(list(test_data), k=9):
     test_samples.append(sample)
     test_labels.append(label)
 
 print(test_samples[0].shape)
 
-plt.imshow(test_samples[0].squeeze(),cmap="gray")
+plt.imshow(test_samples[0].squeeze(), cmap="gray")
 plt.title(class_names[test_labels[0]])
 plt.show()
 
@@ -690,12 +695,12 @@ pred_classes = pred_probs.argmax(dim=1)
 print(pred_classes)
 
 # Plot predictions
-plt.figure(figsize=(9,9))
+plt.figure(figsize=(9, 9))
 nrows = 3
 ncols = 3
-for i,sample in enumerate(test_samples):
-    plt.subplot(nrows, ncols, i+1)
-    plt.imshow(sample.squeeze(),cmap="gray")
+for i, sample in enumerate(test_samples):
+    plt.subplot(nrows, ncols, i + 1)
+    plt.imshow(sample.squeeze(), cmap="gray")
     pred_label = class_names[pred_classes[i]]
     truth_label = class_names[test_labels[i]]
     title_text = f"Pred: {pred_label}, Truth: {truth_label}"
@@ -706,3 +711,82 @@ for i,sample in enumerate(test_samples):
         plt.title(title_text, fontsize=10, c='r')
     plt.axis(False)
     plt.show()
+
+# 10.Making a confusion matrix for further prediction evaluation
+##
+# A confusion matrix represents the prediction summary in matrix form.
+# It shows how many prediction are correct and incorrect per class.
+# It helps in understanding the classes that are being confused by model as other class #
+
+# Import tqdm.auto
+from tqdm.auto import tqdm
+
+# 1. Make predictions with trained model
+y_preds = []
+model_2.eval()
+with torch.inference_mode():
+    for X, y in tqdm(test_dataloader, desc="Making predictions..."):
+        # Do the forward pass
+        y_logit = model_2(X)
+        # Turn predictions from logits -> prediction probabilities -> prediction labels
+        y_pred = torch.softmax(y_logit.squeeze(), dim=0).argmax(dim=1)
+        # Put prediction on CPU for evaluation
+        y_preds.append(y_pred.cpu())
+# Concatenate list of predictions into a tensor
+# print(y_preds)
+y_pred_tensor = torch.cat(y_preds)
+print(y_pred_tensor[:10])
+
+# try:
+#     import torchmetrics,mlextend
+#     print(f"mlextend version: {mlextend.__version__}")
+#     assert int(mlextend.__version__.split(".")[1]) >= 19,"mlextend version should be 0.19.0 or higher"
+# except AssertionError:
+#     print(f"mlextend version: {mlextend.__version__}")
+
+# Setup confusion instance and compare predictions to targets
+from torchmetrics import ConfusionMatrix
+from mlxtend.plotting import plot_confusion_matrix
+
+# 2. Setup confusion matrix instance and compare predictions to targets
+confmat = ConfusionMatrix(num_classes=len(class_names), task='multiclass')
+confmat_tensor = confmat(preds=y_pred_tensor,
+                         target=test_data.targets)
+
+# 3. Plot the confusion matrix
+fig, ax = plot_confusion_matrix(
+    conf_mat=confmat_tensor.numpy(),  # matplotlib likes working with NumPy
+    class_names=class_names,  # turn the row and column labels into class names
+    figsize=(10, 7)
+)
+plt.show()
+
+MODEL_PATH = Path("models")
+MODEL_PATH.mkdir(parents=True,
+                 exist_ok=True)
+MODEL_2 = "03_pytorch_computer_vision_model_2.pth"
+MODEL_SAVE_PATH = MODEL_PATH / MODEL_2
+print(MODEL_SAVE_PATH)
+print(f"Saving model to {MODEL_SAVE_PATH}")
+torch.save(model_2.state_dict(),
+           MODEL_SAVE_PATH)
+
+image_shape = [1, 28, 28]
+torch.manual_seed(42)
+loaded_model_2 = FashionMNISTModelV2(input_shape=1,
+                                     hidden_units=10,
+                                     output_shape=len(class_names))
+loaded_model_2.load_state_dict(torch.load(MODEL_SAVE_PATH))
+print()
+print(model_2_results)
+print()
+torch.manual_seed(42)
+loaded_model_2_results = eval_model(
+    model=loaded_model_2,
+    data_loader=test_dataloader,
+    loss_fn=loss_fn,
+    accuracy_fn=accuracy_fn
+)
+torch.isclose(torch.tensor(model_2_results["model_loss"]),
+              torch.tensor(loaded_model_2_results["model_loss"]),
+              atol=1e-8)

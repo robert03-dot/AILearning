@@ -1,0 +1,13 @@
+TensorFlow is an open-source ML library developed by Google.TensorFlow is used to build and train deep
+learning models as it facilitates the creation of computation graphs and efficient execution on various hardware platforms.
+The article provides an comprehensive overview of tensorflow.
+
+TensorFlow is basically a software library for numerical computation using data flow graphs where:
+* nodes in the graphs represent mathematical operations
+* edges in the graph represent the multidimensional data arrays (called tensors) communicated between them.
+
+COMPUTATIONAL GRAPH
+Any TensorFlow Core program can be divided into two discrete sections:
+Building the computational graph.A computational graph is nothing but a series of TensorFlow operations
+arranged into a graph of nodes.
+Running
